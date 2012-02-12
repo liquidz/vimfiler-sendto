@@ -26,11 +26,12 @@ function! s:make_command(command)
 endfunction
 
 function! s:unite_sources.gather_candidates(args, context)
-    return map(copy(g:vimfiler_sendto), '{
+    let sendto = copy(g:vimfiler_sendto)
+    return map(keys(sendto), '{
 \       "word" : v:val
 \     , "source" : "sendto"
 \     , "kind" : "command"
-\     , "action__command" : s:make_command(v:val)
+\     , "action__command" : s:make_command(sendto[v:val])
 \   }')
 endfunction
 
