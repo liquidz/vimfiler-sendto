@@ -13,7 +13,7 @@ vimfilerにエクスプローラの「送る」のような機能を提供する
 
     let g:vimfiler_sendto = {
     \ , 'unzip' : 'unzip %f'
-    \ , 'zip' : 'zip -r %F.zip %#'
+    \ , 'zip' : 'zip -r %F.zip %*'
     \ , 'Inkscape ベクターグラフィックエディタ' : 'inkspace'
     \ , 'GIMP 画像エディタ' : 'gimp %*'
     \ , 'gedit' : 'gedit'

@@ -88,7 +88,7 @@ function! s:make_command(command)
 
     if stridx(a:command, '%*') != -1 || stridx(a:command, '%#') != -1
         let files = map(marked_files, 'v:val.action__path')
-        let names = map(files, 's:filepath_to_filename(v:val)')
+        let names = map(copy(files), 's:filepath_to_filename(v:val)')
         let command_str = substitute(a:command, '%[#]', join(files, ' '), 'g')
         let command_str = substitute(command_str, '%[*]', join(names, ' '), 'g')
         " マークされたファイルの全展開があれば先頭のマークファイルのファイル名でワイルドカード展開する
