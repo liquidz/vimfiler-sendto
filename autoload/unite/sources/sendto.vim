@@ -1,7 +1,7 @@
 "
 " Send to plugin for vimfiler
 "
-" Version: 0.0.3
+" Version: 0.0.4
 " Author:  Masashi Iizuka (@uochan)
 "
 
@@ -27,22 +27,6 @@ function! s:last(arr)
     return a:arr[len(a:arr) - 1]
 endfunction
 
-" ファイル名から拡張子を除く
-function! s:except_extention(filename)
-    if(stridx(a:filename, '.') == -1)
-        return a:filename
-    else
-        let name = split(a:filename, '[.]')
-        return join(name[0:len(name) - 2], '.')
-    endif
-endfunction
-
-" ファイルパスからファイル名への変換
-function! s:filepath_to_filename(filepath)
-    let sep = has('win32') ? '\' : '/'
-    return s:last(split(a:filepath, sep))
-endfunction
-
 " サブのワイルドカードを変換
 "   %d : カレントディレクトリ
 "   %p : マークされたファイルのフルパス
@@ -62,9 +46,10 @@ function! s:replace_subwildcard(command, filepath)
     let cmd = substitute(cmd, '%p', a:filepath, 'g')
 
     if !empty(a:filepath) && (stridx(cmd, '%f') != -1 || stridx(cmd, '%F') != -1)
-        let filename = s:filepath_to_filename(a:filepath)
+        let filename = fnamemodify(a:filepath, ':t')
         let cmd = substitute(cmd, '%f', filename, 'g')
-        let cmd = substitute(cmd, '%F', s:except_extention(filename), 'g')
+        " 拡張子を抜いたファイル名
+        let cmd = substitute(cmd, '%F', fnamemodify(filename, ':r'), 'g')
     endif
 
     " ignorecaseの設定を戻す
@@ -88,7 +73,7 @@ function! s:make_command(command)
 
     if stridx(a:command, '%*') != -1 || stridx(a:command, '%#') != -1
         let files = map(marked_files, 'v:val.action__path')
-        let names = map(copy(files), 's:filepath_to_filename(v:val)')
+        let names = map(copy(files), 'fnamemodify(v:val, ":t")')
         let command_str = substitute(a:command, '%[#]', join(files, ' '), 'g')
         let command_str = substitute(command_str, '%[*]', join(names, ' '), 'g')
         " マークされたファイルの全展開があれば先頭のマークファイルのファイル名でワイルドカード展開する
@@ -106,7 +91,7 @@ function! s:make_command(command)
     return '!' . join(command_list, '; ') . ' &'
 endfunction
 
-" unite.vimのソースを生成
+" unite.vimの候補を生成
 function! s:unite_sources.gather_candidates(args, context)
     let sendto = copy(g:vimfiler_sendto)
 
