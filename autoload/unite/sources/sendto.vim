@@ -1,7 +1,7 @@
 "
 " Send to plugin for vimfiler
 "
-" Version: 0.0.5
+" Version: 0.0.6
 " Author:  Masashi Iizuka (@uochan)
 "
 
@@ -107,9 +107,7 @@ function! s:make_command(command)
 
     let cmd = '!' . join(command_list, sep . ' ')
     let cmd = cmd . (is_bgrun ? '&' : '')
-    "return cmd
-    "return 'echo "!' . join(command_list, sep . ' ') . (is_bgrun ? '&' : '') . '"'
-    return 'echo "' . cmd . '"'
+    return cmd
 endfunction
 
 " unite.vimの候補を生成
