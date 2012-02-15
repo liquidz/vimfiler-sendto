@@ -13,7 +13,7 @@ let s:unite_sources = { 'name' : 'sendto', 'hooks' : {} }
 " ワイルドカードが存在するか
 function! s:has_wildcard(command)
     let has_wildcard = 0
-    for s in ['%d', '%p', '%f', '%F']
+    for s in ['%d', '%p', '%f', '%F', '%*', '%#']
         if stridx(a:command, s) != -1
             let has_wildcard = 1
         endif
@@ -38,6 +38,7 @@ function! s:replace_subwildcard(command, filepath)
     set noignorecase
 
     let cmd = a:command
+    " ワイルドカードがなければ末尾にファイル名を付加する
     if ! s:has_wildcard(a:command)
         let cmd = cmd . ' %f'
     endif
@@ -60,13 +61,34 @@ function! s:replace_subwildcard(command, filepath)
     return cmd
 endfunction
 
-" コマンド文字列を実行可能な形式に変換
+" マークされたファイルリストをワイルドカードとして展開する
 "   %* : マークされたファイルのファイル名をスペース区切りで展開
 "   %# : マークされたファイルのフルパスをスペース区切りで展開
+function! s:expand_filelist(command, marked_files)
+    let cmd = a:command
+    let files = map(a:marked_files, 'v:val.action__path')
+    let names = map(copy(files), 'fnamemodify(v:val, ":t")')
+    let cmd = substitute(cmd, '%[#]', join(files, ' '), 'g')
+    let cmd = substitute(cmd, '%[*]', join(names, ' '), 'g')
+    " マークされたファイルの全展開があれば
+    " 先頭のマークファイルのファイル名でワイルドカード展開する
+    if s:has_wildcard(cmd)
+        let cmd = s:replace_subwildcard(cmd, files[0])
+    endif
+
+    return cmd
+endfunction
+
+" コマンド文字列を実行可能な形式に変換
 function! s:make_command(command)
+    let cmd = a:command
     let cursor_linenr = get(a:000, 0, line('.'))
     let vimfiler = vimfiler#get_current_vimfiler()
     let sep = has('win32') ? ' &' : ';'
+    " 別プロセスで実行するかどうか(windowsはどちらにしても別プロセスだから無視)
+    let is_bgrun = stridx(cmd, '&') != -1 && !has('win32')
+    " ワイルドカード展開の邪魔にならないよう一時的に削除しておく
+    let cmd = substitute(cmd, '&', '', 'g')
 
     " マークされているファイルリストを取得
     " マークがない場合はカーソルのあたっているファイルを選択
@@ -75,24 +97,19 @@ function! s:make_command(command)
         let marked_files = [ vimfiler#get_file(cursor_linenr) ]
     endif
 
-    if stridx(a:command, '%*') != -1 || stridx(a:command, '%#') != -1
-        let files = map(marked_files, 'v:val.action__path')
-        let names = map(copy(files), 'fnamemodify(v:val, ":t")')
-        let command_str = substitute(a:command, '%[#]', join(files, ' '), 'g')
-        let command_str = substitute(command_str, '%[*]', join(names, ' '), 'g')
-        " マークされたファイルの全展開があれば先頭のマークファイルのファイル名でワイルドカード展開する
-        if s:has_wildcard(command_str)
-            let command_str = s:replace_subwildcard(command_str, files[0])
-        endif
-
-        let command_list = [ command_str ]
+    if stridx(cmd, '%*') != -1 || stridx(cmd, '%#') != -1
+        let command_list = [ s:expand_filelist(cmd, marked_files) ]
     else
         let command_list = map(marked_files, '
-\           s:replace_subwildcard(a:command, v:val.action__path)
+\           s:replace_subwildcard(cmd, v:val.action__path)
 \       ')
     endif
 
-    return '!' . join(command_list, sep . ' ') . ' &'
+    let cmd = '!' . join(command_list, sep . ' ')
+    let cmd = cmd . (is_bgrun ? '&' : '')
+    "return cmd
+    "return 'echo "!' . join(command_list, sep . ' ') . (is_bgrun ? '&' : '') . '"'
+    return 'echo "' . cmd . '"'
 endfunction
 
 " unite.vimの候補を生成

@@ -14,13 +14,16 @@ vimfilerにエクスプローラの「送る」のような機能を提供する
     let g:vimfiler_sendto = {
     \ , 'unzip' : 'unzip %f'
     \ , 'zip' : 'zip -r %F.zip %*'
-    \ , 'Inkscape ベクターグラフィックエディタ' : 'inkspace'
-    \ , 'GIMP 画像エディタ' : 'gimp %*'
-    \ , 'gedit' : 'gedit'
+    \ , 'Inkscape ベクターグラフィックエディタ' : 'inkspace &'
+    \ , 'GIMP 画像エディタ' : 'gimp %* &'
+    \ , 'gedit' : 'gedit &'
     \ }
 
-まだUbuntu上でしか確認していませんが、Windows環境でラベルとパスを
-別々に定義したい状況がありそうなので辞書型での定義としています。
+unite.vimの候補として表示するラベル(key)と実際に実行する際のコマンド(value)を定義します。
+
+valueには後述のワイルドカード指定ができるのと、Linux, Mac(未確認)では
+コマンドの末尾に「&」がついていれば別プロセスとして実行します。
+(Windows環境では末尾に & が入っていても無視されます)
 
 ## .vimrc 設定で使えるワイルドカード
 
