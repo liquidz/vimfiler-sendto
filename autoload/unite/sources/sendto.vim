@@ -1,7 +1,7 @@
 "
 " Send to plugin for vimfiler
 "
-" Version: 0.0.4
+" Version: 0.0.5
 " Author:  Masashi Iizuka (@uochan)
 "
 
@@ -66,6 +66,10 @@ endfunction
 function! s:make_command(command)
     let cursor_linenr = get(a:000, 0, line('.'))
     let vimfiler = vimfiler#get_current_vimfiler()
+    let sep = has('win32') ? ' &' : ';'
+
+    " マークされているファイルリストを取得
+    " マークがない場合はカーソルのあたっているファイルを選択
     let marked_files = vimfiler#get_marked_files()
     if empty(marked_files)
         let marked_files = [ vimfiler#get_file(cursor_linenr) ]
@@ -88,7 +92,7 @@ function! s:make_command(command)
 \       ')
     endif
 
-    return '!' . join(command_list, '; ') . ' &'
+    return '!' . join(command_list, sep . ' ') . ' &'
 endfunction
 
 " unite.vimの候補を生成
