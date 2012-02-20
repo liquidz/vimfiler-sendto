@@ -1,7 +1,7 @@
 "
 " Send to plugin for vimfiler
 "
-" Version: 0.0.6
+" Version: 0.0.7
 " Author:  Masashi Iizuka (@uochan)
 "
 
@@ -105,7 +105,8 @@ function! s:make_command(command)
 \       ')
     endif
 
-    let cmd = '!' . join(command_list, sep . ' ')
+    let cmd = (is_bgrun ? 'silent ' : '')
+    let cmd = cmd . '!' . join(command_list, sep . ' ')
     let cmd = cmd . (is_bgrun ? '&' : '')
     return cmd
 endfunction
